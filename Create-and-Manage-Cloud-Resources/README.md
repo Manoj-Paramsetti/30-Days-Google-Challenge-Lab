@@ -1,6 +1,6 @@
 ## `Create and Manage Cloud Resources: Challenge Lab`
 
-### Task 1: Create a project jumphost instance
+### `Task 1: Create a project jumphost instance`
 
 - Click the **Navigation Menu** > **Computer Engine** > **VM Instances**
 - Select **Create Instance**
@@ -10,31 +10,31 @@
 
 <hr>
 
-### Task 2: Create a Kubernetes service cluster
+### `Task 2: Create a Kubernetes service cluster`
 
-First, authorize your console
+1) First, authorize your console
 
 ```bash
 gcloud auth list
 ```
 
-Check your current **Project ID** is added in the configuration
+2) Check your current **Project ID** is added in the configuration
 ```bash
 gcloud config list project
 ```
 
-Set the default zone to us-east1-b
+3) Set the default zone to us-east1-b
 ```bash
 gcloud config set compute/zone us-east1-b
 ```
 
-Create a container cluster and get the credentials 
+4) Create a container cluster and get the credentials 
 ```bash
 gcloud container clusters create manoj-hello-app
 gcloud container clusters get-credentials manoj-hello-app
 ```
 
-Next create a deployment contanier and expose it to port `8080`
+5) Next create a deployment contanier and expose it to port `8080`
 ```bash
 kubectl create deployment hello-app --image=gcr.io/google-samples/hello-app:2.0
 kubectl expose deployment hello-app --type=LoadBalancer --port 8080
@@ -42,9 +42,9 @@ kubectl expose deployment hello-app --type=LoadBalancer --port 8080
 
 <hr>
 
-### Task 3: Set up an HTTP load balancer
+### `Task 3: Set up an HTTP load balancer`
 
-Create a startup.sh to use it as template for startup-script
+1) Create a startup.sh to use it as template for startup-script
 
 ```bash
 cat << EOF > startup.sh
@@ -58,57 +58,58 @@ cat << EOF > startup.sh
 ```
 
 
-Create a instance template
+2) Create a instance template
 
 ```bash
 gcloud compute instance-templates create nginx-template --metadata-from-file startup-script=startup.sh
 ```
 
-Create a pool for connecting other instances
+3) Create a pool for connecting other instances
 ```bash
 gcloud compute target-pools create nginx-pool
 ```
-Press **N** and select `us-east1`
+##### Press **N** and select `us-east1`
 
+4) Creating 2 same ngnix instances 
 
 ```bash
 gcloud compute instance-groups managed create nginx-group --base-instance-name nginx --size 2 --template nginx-template --target-pool nginx-pool
 ```
 
-Now 2 instance is created, you can list that using below command
+5) Now 2 instances is created, you can list that using below command
 ```bash
 gcloud compute instances list
 ```
 
-Creating firewal rules to allow tcp with port number `80` with the `www-firewall` as the rule name
+6) Creating firewal rules to allow tcp with port number `80` with the `www-firewall` as the rule name
 ```
 gcloud compute firewall-rules create www-firewall --allow tcp:80
 ```
 
-Creating forwarding rules with `ngnix-pool` in port `80`
+7) Creating forwarding rules with `ngnix-pool` in port `80`
 ```bash
 gcloud compute forwarding-rules create nginx-lb --region us-east1 --ports=80 --target-pool nginx-pool
 ```
 
-After this commmand you see the forwarding rules
+8) After this commmand you see the forwarding rules
 
 ```bash
 gcloud compute forwarding-rules list
 ```
 
-Creating health check for Google Cloud
+9) Creating health check for Google Cloud
 
 ```bash
 gcloud compute http-health-checks create http-basic-check
 ```
 
-Setting name port as `ngnix-group`
+10) Setting name port as `ngnix-group`
 
 ```bash
 gcloud compute instance-groups managed set-named-ports nginx-group --named-ports http:80
 ```
 
-Creating and adding backend services
+11) Creating and adding backend services
 
 ```bash
 gcloud compute backend-services create nginx-backend --protocol HTTP --http-health-checks http-basic-check --global
@@ -118,22 +119,28 @@ gcloud compute backend-services create nginx-backend --protocol HTTP --http-heal
 gcloud compute backend-services add-backend nginx-backend --instance-group nginx-group --instance-group-zone us-east1-b --global
 ```
 
-Mapping the urls with the `nginx-backend` service
+12) Mapping the urls with the `nginx-backend` service
+
 ```bash
 gcloud compute url-maps create web-map --default-service nginx-backend
 ```
 
-Setting target proxies for instances
+13) Setting target proxies for instances
+
 ```bash
 gcloud compute target-http-proxies create http-lb-proxy --url-map web-map
 ```
 
-Creating forwarding rule
+14) Creating forwarding rule
+
 ```bash
 gcloud compute forwarding-rules create http-content-rule --global --target-http-proxy http-lb-proxy --ports 80
 ```
 
-Now, after creating you can verify by listing it
+15) Now, after creating you can verify by listing it
+
 ```bash
 gcloud compute forwarding-rules list
 ```
+
+**`Kindly note that, it takes around 10-20 minutes for passing this test case`**
